@@ -94,6 +94,13 @@ public class JwtTokenProvider {
             }
 
             JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
+
+            Date expirationTime = claimsSet.getExpirationTime();
+
+            if (expirationTime == null || expirationTime.before(new Date())) {
+                throw new RuntimeException("JWT 만료");
+            }
+
             return claimsSet.getClaims();
         } catch (Exception e) {
             throw new RuntimeException("JWT 파싱 실패", e);

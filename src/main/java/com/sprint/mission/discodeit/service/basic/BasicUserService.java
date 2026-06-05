@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.service.basic;
 
+import com.sprint.mission.discodeit.auth.jwt.JwtRegistry;
 import com.sprint.mission.discodeit.dto.data.UserDto;
 import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
@@ -8,6 +9,7 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.entity.details.DiscodeitUserDetails;
+import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.exception.user.UserAlreadyExistsException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
@@ -21,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -37,9 +40,11 @@ public class BasicUserService implements UserService {
 //  private final UserStatusRepository userStatusRepository;
   private final UserMapper userMapper;
   private final BinaryContentRepository binaryContentRepository;
-  private final BinaryContentStorage binaryContentStorage;
+//  private final BinaryContentStorage binaryContentStorage;
   private final PasswordEncoder passwordEncoder;
-    private final SessionRegistry sessionRegistry;
+//    private final SessionRegistry sessionRegistry;
+    private final JwtRegistry jwtRegistry;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
   @Override
@@ -65,7 +70,8 @@ public class BasicUserService implements UserService {
           BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
               contentType);
           binaryContentRepository.save(binaryContent);
-          binaryContentStorage.put(binaryContent.getId(), bytes);
+//          binaryContentStorage.put(binaryContent.getId(), bytes);
+            eventPublisher.publishEvent(new BinaryContentCreatedEvent(binaryContent.getId(), bytes));
           return binaryContent;
         })
         .orElse(null);
@@ -138,7 +144,8 @@ public class BasicUserService implements UserService {
           BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
               contentType);
           binaryContentRepository.save(binaryContent);
-          binaryContentStorage.put(binaryContent.getId(), bytes);
+//          binaryContentStorage.put(binaryContent.getId(), bytes);
+            eventPublisher.publishEvent(new BinaryContentCreatedEvent(binaryContent.getId(), bytes));
           return binaryContent;
         })
         .orElse(null);
@@ -169,12 +176,13 @@ public class BasicUserService implements UserService {
   // 로그인 여부 확인
   @Override
   public boolean isLoggedIn(UUID userId) {
-      return sessionRegistry.getAllPrincipals().stream()
-              .filter(principal -> principal instanceof DiscodeitUserDetails)
-              .map(principal -> (DiscodeitUserDetails) principal)
-              .filter(userDetails -> userDetails.getUserDto().id().equals(userId))
-              .anyMatch(userDetails -> !sessionRegistry.getAllSessions(userDetails, false).isEmpty()
-              );
+//      return sessionRegistry.getAllPrincipals().stream()
+//              .filter(principal -> principal instanceof DiscodeitUserDetails)
+//              .map(principal -> (DiscodeitUserDetails) principal)
+//              .filter(userDetails -> userDetails.getUserDto().id().equals(userId))
+//              .anyMatch(userDetails -> !sessionRegistry.getAllSessions(userDetails, false).isEmpty()
+//              );
+      return jwtRegistry.hasActiveJwtInformationByUserId(userId);
   }
 
 

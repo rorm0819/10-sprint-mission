@@ -1,6 +1,8 @@
 package com.sprint.mission.discodeit.auth.handler;
 
 import com.google.gson.Gson;
+import com.sprint.mission.discodeit.auth.jwt.JwtInformation;
+import com.sprint.mission.discodeit.auth.jwt.JwtRegistry;
 import com.sprint.mission.discodeit.auth.jwt.JwtTokenProvider;
 import com.sprint.mission.discodeit.dto.data.JwtDto;
 import com.sprint.mission.discodeit.dto.data.UserDto;
@@ -26,6 +28,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
     private final JwtTokenProvider jwtTokenProvider;
+    private final JwtRegistry jwtRegistry;
     private final Gson gson;
 
     @Override
@@ -34,17 +37,20 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
 
         UserDto userDto = userDetails.getUserDto();
 
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("username", userDto.username());
-        claims.put("roles", userDto.role());
-        claims.put("memberId", userDto.id());
-
-        String subject = userDto.email();
+//        Map<String, Object> claims = new HashMap<>();
+//        claims.put("username", userDto.username());
+//        claims.put("roles", userDto.role());
+//        claims.put("memberId", userDto.id());
+//
+//        String subject = userDto.email();
 
         String accessToken = jwtTokenProvider.generateAccessToken(userDto);
         String refreshToken = jwtTokenProvider.generateRefreshToken(userDto);
 
+        jwtRegistry.registerJwtInformation(new JwtInformation(userDto, accessToken, refreshToken));
+
         Cookie refreshTokenCookie = new Cookie("REFRESH_TOKEN", refreshToken);
+
         refreshTokenCookie.setHttpOnly(true);
         refreshTokenCookie.setSecure(true);
         refreshTokenCookie.setPath("/");

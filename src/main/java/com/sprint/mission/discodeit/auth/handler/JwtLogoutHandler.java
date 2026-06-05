@@ -47,7 +47,7 @@ public class JwtLogoutHandler implements LogoutHandler {
             String userIdValue = String.valueOf(claims.get("sub"));
             UUID userId = UUID.fromString(userIdValue);
 
-            jwtRegistry.invalidateJwtInformationUserId(userId);
+            jwtRegistry.invalidateJwtInformationByUserId(userId);
         } catch (Exception e) {
             throw new RuntimeException("Failed to invalidate JWT information by refresh token", e);
         }

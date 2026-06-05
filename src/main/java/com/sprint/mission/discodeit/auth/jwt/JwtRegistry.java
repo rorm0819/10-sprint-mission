@@ -5,7 +5,7 @@ import java.util.UUID;
 public interface JwtRegistry {
     void registerJwtInformation(JwtInformation jwtInformation);
 
-    void invalidateJwtInformationUserId(UUID userId);
+    void invalidateJwtInformationByUserId(UUID userId);
 
     boolean hasActiveJwtInformationByUserId(UUID userId);
 

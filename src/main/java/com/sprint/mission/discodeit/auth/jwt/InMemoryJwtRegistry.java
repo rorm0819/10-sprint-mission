@@ -35,7 +35,7 @@ public class InMemoryJwtRegistry implements JwtRegistry{
     }
 
     @Override
-    public void invalidateJwtInformationUserId(UUID userId) {
+    public void invalidateJwtInformationByUserId(UUID userId) {
         origin.remove(userId);
     }
 

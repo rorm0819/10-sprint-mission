@@ -2,7 +2,7 @@ package com.sprint.mission.discodeit.Initializer;
 
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.repository.UserRepository;
-import com.sprint.mission.discodeit.role.Role;
+import com.sprint.mission.discodeit.entity.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;

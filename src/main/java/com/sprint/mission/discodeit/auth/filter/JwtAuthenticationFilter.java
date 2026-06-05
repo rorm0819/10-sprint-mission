@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.auth.filter;
 
 import com.sprint.mission.discodeit.auth.jwt.JwtRegistry;
 import com.sprint.mission.discodeit.auth.jwt.JwtTokenProvider;
+import com.sprint.mission.discodeit.service.details.DiscodeitUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,6 +14,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -20,10 +23,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtRegistry jwtRegistry;
+    private final DiscodeitUserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -46,14 +51,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             Map<String, Object> claims = jwtTokenProvider.getClaims(accessToken);
+            String email = String.valueOf(claims.get("email"));
 
-            setAuthenticationToContext(claims);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
         } catch (Exception e) {
             SecurityContextHolder.clearContext();
             request.setAttribute("exception", e);
         }
 
+        filterChain.doFilter(request, response);
     }
 
     @Override
@@ -71,19 +87,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return claims;
     }
      */
-
-    private void setAuthenticationToContext(Map<String, Object> claims) {
-        Integer username = (Integer) claims.get("memberId");
-
-        List<String> roles = (List<String>) claims.get("roles");
-        List<GrantedAuthority> authorities = roles.stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-                .collect(Collectors.toList());
-        Authentication authentication =
-                new UsernamePasswordAuthenticationToken(username, null, authorities);
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-    }
 
     private String resolveAccessToken(HttpServletRequest request) {
         return request.getHeader("Authorization")

@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.config;
 
+import com.sprint.mission.discodeit.auth.filter.JwtAuthenticationFilter;
 import com.sprint.mission.discodeit.auth.handler.*;
 import com.sprint.mission.discodeit.service.details.DiscodeitUserDetailsService;
 import org.springframework.context.annotation.Bean;
@@ -20,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
@@ -29,7 +31,7 @@ import org.springframework.security.web.session.HttpSessionEventPublisher;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, LoginFailureHandler loginFailureHandler, AuthenticationEntryPoint authenticationEntryPoint, AccessDeniedHandler accessDeniedHandler, SessionRegistry sessionRegistry, UserDetailsService userDetailsService, DiscodeitUserDetailsService discodeitUserDetailsService, JwtLoginSuccessHandler jwtLoginSuccessHandler, JwtLogoutHandler jwtLogoutHandler) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, LoginFailureHandler loginFailureHandler, AuthenticationEntryPoint authenticationEntryPoint, AccessDeniedHandler accessDeniedHandler, SessionRegistry sessionRegistry, UserDetailsService userDetailsService, DiscodeitUserDetailsService discodeitUserDetailsService, JwtLoginSuccessHandler jwtLoginSuccessHandler, JwtLogoutHandler jwtLogoutHandler, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
                 .headers().frameOptions().sameOrigin()
                 .and()
@@ -58,6 +60,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .formLogin(login -> login
                         .loginProcessingUrl("/api/auth/login")
                         .successHandler(jwtLoginSuccessHandler)
@@ -88,7 +91,7 @@ public class SecurityConfig {
                         .accessDeniedHandler(accessDeniedHandler)
                 )
                 .sessionManagement(session -> session
-                        .sessionFixation(fixation -> fixation.changeSessionId())
+//                        .sessionFixation(fixation -> fixation.changeSessionId())
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 );
 
